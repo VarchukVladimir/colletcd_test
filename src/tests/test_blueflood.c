@@ -164,13 +164,21 @@ int plugin_register_complex_config (const char *type,
 {
 	oconfig_item_t *config;
 	oconfig_item_t *nested_config;
+#ifdef ENABLE_METRIC_NUM
 #ifdef ENABLE_AUTH_CONFIG
 	oconfig_item_t *nested_authconfig;
 	int children_num = 4;
 #else
 	int children_num = 3;
 #endif
-
+#else
+#ifdef ENABLE_AUTH_CONFIG
+	oconfig_item_t *nested_authconfig;
+	int children_num = 3;
+#else
+	int children_num = 2;
+#endif
+#endif
 	INFO ("plugin_register_complex_config");
 	s_data.type_plugin_name = strdup(type);
 	s_data.plugin_config_cb = callback;
@@ -183,7 +191,9 @@ int plugin_register_complex_config (const char *type,
 	nested_config = alloc_config_children(config, children_num /* tenantdId, ttl, [Auth] */);
 	set_str_config_item(nested_config++, "TenantId", "987654321" );
 	set_int_config_item(nested_config++, "ttlInSeconds", 12345 );
+#ifdef ENABLE_METRIC_NUM
 	set_int_config_item(nested_config++, "MetricNum", 3 );
+#endif
 #ifdef ENABLE_AUTH_CONFIG
 
 	/* AuthURL */
@@ -250,7 +260,9 @@ int plugin_register_complex_read (const char *group, const char *name,
 {
 	INFO ("plugin_register_complex_read");
 	s_data.user_data = *user_data;
+#ifndef ENABLE_METRIC_NUM
 	s_data.plugin_read_cb = callback;
+#endif
 	return 0;	
 }
 
@@ -696,8 +708,10 @@ void mock_test_3_write_callback_yajl_gen_alloc_error_inside_read()
 	assert(err==0);
 	/* inject yajl_gen_alloc error inside of write */
 	init_mock_test(1);
+#ifndef ENABLE_METRIC_NUM
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err!=0);
+#endif
 	template_end();
 }
 
@@ -718,8 +732,10 @@ void mock_test_4_write_callback_curl_easy_perform_error()
 	template_begin(CB_CONFIG_OK, CB_INIT_OK);
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
+#ifndef ENABLE_METRIC_NUM
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err!=0);
+#endif
 	/* following write attempt should fail */
 	template_end();
 }
@@ -731,8 +747,10 @@ void mock_test_5_write_callback_curl_easy_setopt_error()
 	template_begin(CB_CONFIG_OK, CB_INIT_OK);
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
+#ifndef ENABLE_METRIC_NUM
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err!=0);
+#endif
 	template_end();
 }
 
@@ -745,8 +763,10 @@ void mock_test_6_all_ok()
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
 	/* test read callback */
+#ifndef ENABLE_METRIC_NUM
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err==0);
+#endif
 	/* test flush callback */
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
@@ -779,8 +799,10 @@ void mock_test_7_auth_ok()
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
 	/* test read callback */
+#ifndef ENABLE_METRIC_NUM
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err==0);
+#endif
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
 	/* test flush callback */
@@ -796,16 +818,20 @@ void mock_test_8_auth_yajl_tree_parse_error_and_resend_logic_success()
 	template_begin(CB_CONFIG_OK, CB_INIT_OK);
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
+#ifndef ENABLE_METRIC_NUM
 	/* test read callback */
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err!=0);
 	/* this write should fail because of previous fail of read ("send") callback*/
 	err = generate_write_metrics(&s_data, 4);
 	assert(err!=0);
+#endif
 	/* recover after send error and send again and then test write, it must be ok now */
 	init_mock_test(6);
+#ifndef ENABLE_METRIC_NUM
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err==0);
+#endif
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
 	/* test flush callback */
@@ -821,12 +847,14 @@ void mock_test_9_auth_yajl_tree_parse_error_errbuffer_not_null()
 	template_begin(CB_CONFIG_OK, CB_INIT_OK);
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
+#ifndef ENABLE_METRIC_NUM
 	/* test read callback */
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err!=0);
 	/* this write should fail because of previous fail of read ("send") callback */
 	err = generate_write_metrics(&s_data, 4);
 	assert(err!=0);
+#endif
 	/* test flush callback */
 	err = s_data.plugin_flush_cb(0, "", &s_data.user_data);
 	assert(err!=0);
@@ -841,10 +869,12 @@ void mock_test_10_auth_curl_easy_getinfo_error_second_attempt()
 	template_begin(CB_CONFIG_OK, CB_INIT_OK);
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
+#ifndef ENABLE_METRIC_NUM
 	/* test read callback */
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	/*auth error in current implementation leads to error in read plugin callback*/
 	assert(err!=0);
+#endif
 	template_end();
 }
 
@@ -868,9 +898,11 @@ void mock_test_12_auth_curl_callback_realloc_error()
 	template_begin(CB_CONFIG_OK, CB_INIT_OK);
 	err = generate_write_metrics(&s_data, 4);
 	assert(err==0);
+#ifndef ENABLE_METRIC_NUM
 	/* test read callback */
 	err = s_data.plugin_read_cb(&s_data.user_data);
 	assert(err!=0);
+#endif
 	template_end();
 }
 
