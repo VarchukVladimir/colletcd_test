@@ -706,7 +706,6 @@ static int jsongen_metrics_output(wb_callback_t *cb, const data_set_t *ds,
 			if (DEFAULT_METRIC_NUM != cb->metric_num)
 			{
 				cb->metrics_count++;
-				INFO ("metric_num = %d, cb->metrics_count=%d", cb->metric_num, cb->metrics_count);
 				if (cb->metrics_count == cb->metric_num)
 				{
 					int err;
@@ -859,8 +858,6 @@ static int send_data(user_data_t *user_data)
 	cb = user_data->data;
 	cb->metrics_count = 0;
 	pthread_mutex_lock(&cb->send_lock);
-	if (DEFAULT_METRIC_NUM == cb->metric_num)
-		return err;
 	/* finalize json structure if last send was a success */
 	if (cb->successfull_send == 0) /* OK */
 	{
@@ -879,8 +876,7 @@ static int send_data(user_data_t *user_data)
 	{
 		cb->successfull_send = 0;
 		err = jsongen_init(&cb->yajl_gen);
-	}
-	else
+	} else
 	{
 		/* if send was not a success then just try to
 		 * resend it next time, do not free yajl
@@ -1052,11 +1048,11 @@ static int read_config(oconfig_item_t *ci)
 	plugin_register_flush(PLUGIN_NAME, wb_flush, &user_data);
 	/* register read plugin to ensure that data will be sent
 	 * on each configured interval */
-//	if (cb->metric_num == DEFAULT_METRIC_NUM)
-//	{
+	if (DEFAULT_METRIC_NUM == cb->metric_num)
+	{
 		plugin_register_complex_read(NULL, PLUGIN_NAME, wb_read, NULL, &user_data);
 		INFO("%s plugin: read callback registered", PLUGIN_NAME);
-//	}
+	}
 	user_data.free_func = wb_callback_free;
 	plugin_register_write(PLUGIN_NAME, wb_write, &user_data);
 	INFO("%s plugin: write callback registered", PLUGIN_NAME);
