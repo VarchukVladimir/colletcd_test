@@ -166,9 +166,9 @@ int plugin_register_complex_config (const char *type,
 	oconfig_item_t *nested_config;
 #ifdef ENABLE_AUTH_CONFIG
 	oconfig_item_t *nested_authconfig;
-	int children_num = 3;
+	int children_num = 4;
 #else
-	int children_num = 2;
+	int children_num = 3;
 #endif
 
 	INFO ("plugin_register_complex_config");
@@ -183,6 +183,7 @@ int plugin_register_complex_config (const char *type,
 	nested_config = alloc_config_children(config, children_num /* tenantdId, ttl, [Auth] */);
 	set_str_config_item(nested_config++, "TenantId", "987654321" );
 	set_int_config_item(nested_config++, "ttlInSeconds", 12345 );
+	set_int_config_item(nested_config++, "MetricNum", 3 );
 #ifdef ENABLE_AUTH_CONFIG
 
 	/* AuthURL */
