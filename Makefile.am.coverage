@@ -12,7 +12,6 @@ clean-gcno:
 	@echo Removing old coverage results
 	-find -name '*.gcno' -print | xargs -r rm
 
-
 .PHONY: coverage-html generate-coverage-html clean-coverage-html
 coverage-html: clean-gcda
 	-$(MAKE) $(AM_MAKEFLAGS) -k check
