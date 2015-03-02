@@ -701,8 +701,8 @@ static int jsongen_metrics_output(wb_callback_t *cb, const data_set_t *ds,
 			YAJL_CHECK_RETURN_ON_ERROR(gen_ttl_kv(cb->yajl_gen, cb->ttl));
 
 			YAJL_CHECK_RETURN_ON_ERROR(yajl_gen_map_close(cb->yajl_gen));
-			/*if number of metrics euqal of configured num metrics - send data*/
 
+			/*if number of metrics euqal of configured num metrics - send data*/
 			if (DEFAULT_METRIC_NUM != cb->metric_num)
 			{
 				cb->metrics_count++;
