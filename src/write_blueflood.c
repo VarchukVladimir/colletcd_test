@@ -711,10 +711,6 @@ static int jsongen_metrics_output(wb_callback_t *cb, const data_set_t *ds,
 					int err;
 					YAJL_CHECK_RETURN_ON_ERROR(yajl_gen_array_close(cb->yajl_gen));
 
-					const unsigned char *post_data_buf;
-					size_t post_data_len;
-					YAJL_CHECK_RETURN_ON_ERROR(yajl_gen_get_buf(cb->yajl_gen, &post_data_buf, &post_data_len));
-
 					err = send_json(&cb->yajl_gen);
 					if (err == 0) /* OK */
 					{
@@ -901,7 +897,6 @@ static int wb_read(user_data_t *user_data)
 	return send_data(user_data);
 }
 
-
 static void config_get_auth_params(oconfig_item_t *child, wb_callback_t *cb,
         auth_data_t *auth_data)
 {
@@ -1048,11 +1043,9 @@ static int read_config(oconfig_item_t *ci)
 	plugin_register_flush(PLUGIN_NAME, wb_flush, &user_data);
 	/* register read plugin to ensure that data will be sent
 	 * on each configured interval */
-	if (DEFAULT_METRIC_NUM == cb->metric_num)
-	{
-		plugin_register_complex_read(NULL, PLUGIN_NAME, wb_read, NULL, &user_data);
-		INFO("%s plugin: read callback registered", PLUGIN_NAME);
-	}
+	plugin_register_complex_read(NULL, PLUGIN_NAME, wb_read, NULL, &user_data);
+	INFO("%s plugin: read callback registered", PLUGIN_NAME);
+
 	user_data.free_func = wb_callback_free;
 	plugin_register_write(PLUGIN_NAME, wb_write, &user_data);
 	INFO("%s plugin: write callback registered", PLUGIN_NAME);
